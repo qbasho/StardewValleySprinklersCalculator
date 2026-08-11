@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SV Sprinklers Calculator</title>
+    
+    <link rel="icon" href="https://stardewvalleywiki.com/mediawiki/images/9/90/Iridium_Sprinkler.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
+    <link rel="stylesheet" href="./style.css">
+    
+    <script src="lang.js"></script>
+</head>
+<body>
+
+    <a href="https://x.com/qbasho" target="_blank" class="author-link">by @qbasho</a>
+
+    <div class="box panel">
+        <h1 data-i18n="title">Planner</h1>
+        
+        <div class="opt">
+            <label class="check-lbl btn-anim">
+                <input type="checkbox" id="nozzle" onchange="calc()">
+                <span data-i18n="nozzle">Nozzles</span>
+            </label>
+            <div class="meta" data-i18n="sub">(Info)</div>
+        </div>
+
+        <!-- Basic Sprinkler -->
+        <div class="row" id="r-basic">
+            <div class="grp">
+                <img src="https://stardewvalleywiki.com/mediawiki/images/0/08/Sprinkler.png" class="icon" alt="Basic Sprinkler">
+                <div class="text-col">
+                    <span class="name" data-i18n="basic">Basic</span>
+                    <span class="meta" id="m-basic">...</span>
+                </div>
+            </div>
+            <div class="right-grp">
+                <button class="rst-btn" id="btn-basic" onclick="clr('i-basic')">X</button>
+                <input type="number" id="i-basic" min="0" max="999" inputmode="numeric" oninput="v(this); calc()" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            </div>
+        </div>
+
+        <!-- Quality Sprinkler -->
+        <div class="row" id="r-quality">
+            <div class="grp">
+                <img src="https://stardewvalleywiki.com/mediawiki/images/a/af/Quality_Sprinkler.png" class="icon" alt="Quality Sprinkler">
+                <div class="text-col">
+                    <span class="name" data-i18n="quality">Quality</span>
+                    <span class="meta" id="m-quality">...</span>
+                </div>
+            </div>
+            <div class="right-grp">
+                <button class="rst-btn" id="btn-quality" onclick="clr('i-quality')">X</button>
+                <input type="number" id="i-quality" min="0" max="999" inputmode="numeric" oninput="v(this); calc()" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            </div>
+        </div>
+
+        <!-- Iridium Sprinkler -->
+        <div class="row" id="r-iridium">
+            <div class="grp">
+                <img src="https://stardewvalleywiki.com/mediawiki/images/9/90/Iridium_Sprinkler.png" class="icon" alt="Iridium Sprinkler">
+                <div class="text-col">
+                    <span class="name" data-i18n="iridium">Iridium</span>
+                    <span class="meta" id="m-iridium">...</span>
+                </div>
+            </div>
+            <div class="right-grp">
+                <button class="rst-btn" id="btn-iridium" onclick="clr('i-iridium')">X</button>
+                <input type="number" id="i-iridium" min="0" max="999" inputmode="numeric" oninput="v(this); calc()" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            </div>
+        </div>
+
+        <div class="res">
+            <div data-i18n="total">Total:</div>
+            <div class="total" id="sum">0</div>
+            <div class="res-list" id="resList" data-i18n="wait">...</div>
+        </div>
+    </div>
+
+    <!-- Language change button -->
+    <div class="box fab" onclick="toggleModal(true)">🌍</div>
+
+    <!-- Language selection modal -->
+    <div class="modal" id="langModal">
+        <div class="box menu">
+            <div style="text-align:center; border-bottom:2px dashed #a35d28; margin-bottom:10px; font-size:1.8rem; color:#8b0000">
+                LANGUAGE
+            </div>
+            <button class="lang-btn btn-anim" onclick="setLang('en')">🇺🇸 English</button>
+            <button class="lang-btn btn-anim" onclick="setLang('pl')">🇵🇱 Polski</button>
+            <button class="lang-btn btn-anim" onclick="setLang('de')">🇩🇪 Deutsch</button>
+            <button class="lang-btn btn-anim" onclick="setLang('es')">🇪🇸 Español</button>
+            <button class="lang-btn btn-anim close" onclick="toggleModal(false)" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // --- VARIABLES AND CONFIGURATION ---
+        let cur = 'en';
+        
+        const cfg = { 
+            basic: 4, 
+            quality: 8, 
+            iridium: 24 
+        };
+        
+        const mats = {
+            copper:  { img: "f/f1/Copper_Bar.png", key: "copper" },
+            iron:    { img: "6/6c/Iron_Bar.png", key: "iron" },
+            gold:    { img: "4/4e/Gold_Bar.png", key: "gold" },
+            quartz:  { img: "9/98/Refined_Quartz.png", key: "quartz" },
+            iri_bar: { img: "c/c4/Iridium_Bar.png", key: "iri_bar" },
+            battery: { img: "2/25/Battery_Pack.png", key: "battery" }
+        };
+        
+        const wikiBase = "https://stardewvalleywiki.com/mediawiki/images/";
+
+        // --- UTILITY FUNCTIONS ---
+        
+        // Validation - max 999
+        const v = (e) => { 
+            e.value = e.value.replace(/\D/g, ''); 
+            if (Number(e.value) > 999) {
+                e.value = 999;
+            }
+        };
+
+        // Clearing and recalculating
+        const clr = (id) => {
+            document.getElementById(id).value = ''; 
+            calc();
+        };
+
+        // Function for selecting the correct noun plural form
+        function getPluralName(lang, count, translationData) {
+            // Fallback for old entries if the dictionary hasn't been updated yet
+            if (typeof translationData === 'string') {
+                return translationData;
+            }
+            
+            // Grammar rules for the Polish language
+            if (lang === 'pl') {
+                if (count === 1) return translationData[0]; // e.g. 1 item
+                
+                const mod10 = count % 10;
+                const mod100 = count % 100;
+                
+                if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+                    return translationData[1]; // e.g. 2, 3, 24 items
+                }
+                
+                return translationData[2] || translationData[1]; // e.g. 5, 12, 27 items
+            }
+            
+            // Standard division for EN, DE, ES (index 0 for singular, index 1 for plural)
+            return count === 1 ? translationData[0] : (translationData[1] || translationData[0]);
+        }
+
+        // --- UI FUNCTIONS ---
+
+        function setLang(l) {
+            cur = l;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                if (dictionary[cur][el.dataset.i18n]) {
+                    el.innerText = dictionary[cur][el.dataset.i18n];
+                }
+            });
+            calc();
+            toggleModal(false);
+        }
+
+        function toggleModal(s) {
+            const m = document.getElementById('langModal');
+            s ? m.classList.add('open') : m.classList.remove('open');
+        }
+
+        // --- MAIN CALCULATION LOGIC ---
+
+        function calc() {
+            const boost = document.getElementById('nozzle').checked;
+            const b = parseInt(document.getElementById('i-basic').value) || 0;
+            const q = parseInt(document.getElementById('i-quality').value) || 0;
+            const i = parseInt(document.getElementById('i-iridium').value) || 0;
+
+            // Clear buttons control
+            document.getElementById('btn-basic').classList.toggle('show', b > 0);
+            document.getElementById('btn-quality').classList.toggle('show', q > 0);
+            document.getElementById('btn-iridium').classList.toggle('show', i > 0);
+
+            let totalTiles = 0;
+
+            // Sprinklers: Basic
+            totalTiles += b * (boost ? 8 : 4);
+            const txtB = `${dictionary[cur].range}: ${boost ? 8 : 4} ${dictionary[cur].tiles}` + (boost ? ` (${dictionary[cur].boost})` : '');
+            document.getElementById('m-basic').innerText = txtB;
+            document.getElementById('r-basic').classList.toggle('boost', boost);
+
+            // Sprinklers: Quality
+            totalTiles += q * (boost ? 24 : 8);
+            const txtQ = `${dictionary[cur].range}: ${boost ? 24 : 8} ${dictionary[cur].tiles}` + (boost ? ` (${dictionary[cur].boost})` : '');
+            document.getElementById('m-quality').innerText = txtQ;
+            document.getElementById('r-quality').classList.toggle('boost', boost);
+
+            // Sprinklers: Iridium
+            totalTiles += i * (boost ? 48 : 24);
+            const txtI = `${dictionary[cur].range}: ${boost ? 48 : 24} ${dictionary[cur].tiles}` + (boost ? ` (${dictionary[cur].boost})` : '');
+            document.getElementById('m-iridium').innerText = txtI;
+            document.getElementById('r-iridium').classList.toggle('boost', boost);
+
+            // Counter update and animation
+            const sumEl = document.getElementById('sum');
+            sumEl.style.transform = "scale(1.2)";
+            setTimeout(() => sumEl.style.transform = "scale(1)", 150);
+            sumEl.innerText = totalTiles;
+
+            // Material requirements
+            const req = { copper: 0, iron: 0, gold: 0, quartz: 0, iri_bar: 0, battery: 0 };
+            req.copper += b; 
+            req.iron += b;
+            req.iron += q; 
+            req.gold += q; 
+            req.quartz += q;
+            req.gold += i; 
+            req.iri_bar += i; 
+            req.battery += i;
+
+            // Generating results
+            const resDiv = document.getElementById('resList');
+            if (totalTiles === 0) {
+                resDiv.innerText = dictionary[cur].wait;
+            } else {
+                let htmlParts = [];
+                Object.keys(req).forEach(k => {
+                    if (req[k] > 0) {
+                        // Reading the dictionary using a function that supports arrays with plural forms
+                        const rawNameData = dictionary[cur][mats[k].key];
+                        const itemName = getPluralName(cur, req[k], rawNameData);
+                        
+                        htmlParts.push(
+                            `<span class="res-item">` +
+                            `<img src="${wikiBase}${mats[k].img}" class="res-img" alt="${k}"> ` +
+                            `<strong>x${req[k]}</strong> ${itemName}` +
+                            `</span>`
+                        );
+                    }
+                });
+                resDiv.innerHTML = htmlParts.join(' ');
+            }
+        }
+
+        // Application start
+        setLang('en');
+    </script>
+
+</body>
+</html>
