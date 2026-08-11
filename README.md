@@ -4,7 +4,7 @@
 
 A lightweight, interactive web utility designed for Stardew Valley players to easily plan, manage, and calculate their farm's watering efficiency. Figure out exactly how many crops you can water based on the tier and quantity of sprinklers you have!
 
-![Website](https://img.shields.io/website?url=https%3A%2F%2Fqbasho.github.io%2FStardewValleySprinklersCalculator%2F&up_message=Visit%20the%20website&style=for-the-badge&label=Click%20here%20to)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Fqbasho.github.io%2FStardewValleySprinklersCalculator%2F&up_message=Visit%20the%20website&style=for-the-badge&label=Click%20here%20to)](https://qbasho.github.io/StardewValleySprinklersCalculator/)
 
 ---
 
