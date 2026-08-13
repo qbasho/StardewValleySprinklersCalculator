@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SV Sprinklers Calculator</title>
-    
     <link rel="icon" href="https://stardewvalleywiki.com/mediawiki/images/9/90/Iridium_Sprinkler.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
     <link rel="stylesheet" href="./style.css">
-    
     <script src="lang.js"></script>
 </head>
 <body>
 
     <a href="https://x.com/qbasho" target="_blank" class="author-link">by @qbasho</a>
 
-    <div class="box panel">
-        <h1 data-i18n="title">Planner</h1>
+    <div class="box panel" id="planner">
+        <h1 data-i18n="title">Sprinklers Calculator</h1>
         
         <div class="opt">
             <label class="check-lbl btn-anim">
@@ -26,7 +24,14 @@
             <div class="meta" data-i18n="sub">(Info)</div>
         </div>
 
-        <!-- Basic Sprinkler -->
+        <div class="opt" style="margin-top: 5px;">
+            <label class="check-lbl btn-anim">
+                <input type="checkbox" id="reverseMode" onchange="toggleReverseMode()">
+                <span data-i18n="reverseMode">Reverse Mode</span>
+            </label>
+            <div class="meta" id="auto-calculate" data-i18n="autoCalculate">Auto-calculate</div>
+        </div>
+
         <div class="row" id="r-basic">
             <div class="grp">
                 <img src="https://stardewvalleywiki.com/mediawiki/images/0/08/Sprinkler.png" class="icon" alt="Basic Sprinkler">
@@ -41,7 +46,6 @@
             </div>
         </div>
 
-        <!-- Quality Sprinkler -->
         <div class="row" id="r-quality">
             <div class="grp">
                 <img src="https://stardewvalleywiki.com/mediawiki/images/a/af/Quality_Sprinkler.png" class="icon" alt="Quality Sprinkler">
@@ -56,7 +60,6 @@
             </div>
         </div>
 
-        <!-- Iridium Sprinkler -->
         <div class="row" id="r-iridium">
             <div class="grp">
                 <img src="https://stardewvalleywiki.com/mediawiki/images/9/90/Iridium_Sprinkler.png" class="icon" alt="Iridium Sprinkler">
@@ -71,17 +74,47 @@
             </div>
         </div>
 
-        <div class="res">
-            <div data-i18n="total">Total:</div>
+        <div class="row" id="r-reverse" style="display: none;">
+            <div class="grp">
+                <img src="https://stardewvalleywiki.com/mediawiki/images/1/1b/Carrot_Stage_4.png" class="icon" alt="Tiles">
+                <div class="text-col">
+                    <span class="name" data-i18n="howManyTiles">How many tiles?</span>
+                    <span class="meta" id="m-reverse" data-i18n="targetCoverage">Enter the number of tiles to be watered</span>
+                </div>
+            </div>
+            <div class="right-grp">
+                <button class="rst-btn" id="btn-reverse" onclick="clr('i-reverse')">X</button>
+                <input type="number" id="i-reverse" min="0" max="9999" inputmode="numeric" oninput="v(this); calc()" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            </div>
+        </div>
+
+        <div class="opt" id="reverse-options" style="display: none;">
+            <div id="used-sprinklers" style="font-size: 1.2rem; margin-bottom: 10px; color: #5c3a21; text-align: center; text-transform: uppercase;" data-i18n="usedSprinklers">Used sprinklers</div>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+                <label class="check-lbl btn-anim" style="font-size: 1.1rem; padding: 4px 8px;">
+                    <input type="checkbox" id="rev-iridium" checked onchange="calc()">
+                    <span data-i18n="iridium">Iridium</span>
+                </label>
+                <label class="check-lbl btn-anim" style="font-size: 1.1rem; padding: 4px 8px;">
+                    <input type="checkbox" id="rev-quality" checked onchange="calc()">
+                    <span data-i18n="quality">Quality</span>
+                </label>
+                <label class="check-lbl btn-anim" style="font-size: 1.1rem; padding: 4px 8px;">
+                    <input type="checkbox" id="rev-basic" checked onchange="calc()">
+                    <span data-i18n="basic">Basic</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="res" id="total">
+            <div id="total-title" data-i18n="total">Total:</div>
             <div class="total" id="sum">0</div>
             <div class="res-list" id="resList" data-i18n="wait">...</div>
         </div>
     </div>
 
-    <!-- Language change button -->
     <div class="box fab" onclick="toggleModal(true)">🌍</div>
 
-    <!-- Language selection modal -->
     <div class="modal" id="langModal">
         <div class="box menu">
             <div style="text-align:center; border-bottom:2px dashed #a35d28; margin-bottom:10px; font-size:1.8rem; color:#8b0000">
@@ -96,15 +129,10 @@
     </div>
 
     <script>
-        // --- VARIABLES AND CONFIGURATION ---
         let cur = 'en';
+        let isReverseMode = false;
         
-        const cfg = { 
-            basic: 4, 
-            quality: 8, 
-            iridium: 24 
-        };
-        
+        const cfg = { basic: 4, quality: 8, iridium: 24 };
         const mats = {
             copper:  { img: "f/f1/Copper_Bar.png", key: "copper" },
             iron:    { img: "6/6c/Iron_Bar.png", key: "iron" },
@@ -113,56 +141,34 @@
             iri_bar: { img: "c/c4/Iridium_Bar.png", key: "iri_bar" },
             battery: { img: "2/25/Battery_Pack.png", key: "battery" }
         };
-        
         const wikiBase = "https://stardewvalleywiki.com/mediawiki/images/";
 
-        // --- UTILITY FUNCTIONS ---
-        
-        // Validation - max 999
         const v = (e) => { 
             e.value = e.value.replace(/\D/g, ''); 
-            if (Number(e.value) > 999) {
-                e.value = 999;
-            }
+            if (Number(e.value) > 9999) { e.value = 9999; }
         };
 
-        // Clearing and recalculating
         const clr = (id) => {
             document.getElementById(id).value = ''; 
             calc();
         };
 
-        // Function for selecting the correct noun plural form
         function getPluralName(lang, count, translationData) {
-            // Fallback for old entries if the dictionary hasn't been updated yet
-            if (typeof translationData === 'string') {
-                return translationData;
-            }
-            
-            // Grammar rules for the Polish language
+            if (typeof translationData === 'string') return translationData;
             if (lang === 'pl') {
-                if (count === 1) return translationData[0]; // e.g. 1 item
-                
+                if (count === 1) return translationData[0]; 
                 const mod10 = count % 10;
                 const mod100 = count % 100;
-                
-                if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
-                    return translationData[1]; // e.g. 2, 3, 24 items
-                }
-                
-                return translationData[2] || translationData[1]; // e.g. 5, 12, 27 items
+                if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return translationData[1];
+                return translationData[2] || translationData[1];
             }
-            
-            // Standard division for EN, DE, ES (index 0 for singular, index 1 for plural)
             return count === 1 ? translationData[0] : (translationData[1] || translationData[0]);
         }
-
-        // --- UI FUNCTIONS ---
 
         function setLang(l) {
             cur = l;
             document.querySelectorAll('[data-i18n]').forEach(el => {
-                if (dictionary[cur][el.dataset.i18n]) {
+                if (dictionary[cur] && dictionary[cur][el.dataset.i18n]) {
                     el.innerText = dictionary[cur][el.dataset.i18n];
                 }
             });
@@ -175,46 +181,113 @@
             s ? m.classList.add('open') : m.classList.remove('open');
         }
 
-        // --- MAIN CALCULATION LOGIC ---
+        function toggleReverseMode() {
+            isReverseMode = document.getElementById('reverseMode').checked;
+            
+            const displayStandard = isReverseMode ? 'none' : 'flex';
+            const displayReverse = isReverseMode ? 'flex' : 'none';
+
+            document.getElementById('r-basic').style.display = displayStandard;
+            document.getElementById('r-quality').style.display = displayStandard;
+            document.getElementById('r-iridium').style.display = displayStandard;
+            
+            document.getElementById('r-reverse').style.display = displayReverse;
+            document.getElementById('reverse-options').style.display = isReverseMode ? 'block' : 'none';
+
+            const totalTitleElement = document.getElementById('total-title');
+            
+            if (isReverseMode) {
+                totalTitleElement.dataset.i18n = 'youNeed';
+            } else {
+                totalTitleElement.dataset.i18n = 'total';
+            }
+            
+            if (dictionary[cur] && dictionary[cur][totalTitleElement.dataset.i18n]) {
+                totalTitleElement.innerText = dictionary[cur][totalTitleElement.dataset.i18n];
+            }
+            
+            calc();
+        }
 
         function calc() {
             const boost = document.getElementById('nozzle').checked;
-            const b = parseInt(document.getElementById('i-basic').value) || 0;
-            const q = parseInt(document.getElementById('i-quality').value) || 0;
-            const i = parseInt(document.getElementById('i-iridium').value) || 0;
-
-            // Clear buttons control
-            document.getElementById('btn-basic').classList.toggle('show', b > 0);
-            document.getElementById('btn-quality').classList.toggle('show', q > 0);
-            document.getElementById('btn-iridium').classList.toggle('show', i > 0);
-
+            let b = 0, q = 0, i = 0;
             let totalTiles = 0;
+            let totalSprinklers = 0;
 
-            // Sprinklers: Basic
-            totalTiles += b * (boost ? 8 : 4);
-            const txtB = `${dictionary[cur].range}: ${boost ? 8 : 4} ${dictionary[cur].tiles}` + (boost ? ` (${dictionary[cur].boost})` : '');
-            document.getElementById('m-basic').innerText = txtB;
-            document.getElementById('r-basic').classList.toggle('boost', boost);
+            if (isReverseMode) {
+                const targetTiles = parseInt(document.getElementById('i-reverse').value) || 0;
+                document.getElementById('btn-reverse').classList.toggle('show', targetTiles > 0);
+                
+                const capI = boost ? 48 : 24;
+                const capQ = boost ? 24 : 8;
+                const capB = boost ? 8 : 4;
+                
+                const useI = document.getElementById('rev-iridium').checked;
+                const useQ = document.getElementById('rev-quality').checked;
+                const useB = document.getElementById('rev-basic').checked;
 
-            // Sprinklers: Quality
-            totalTiles += q * (boost ? 24 : 8);
-            const txtQ = `${dictionary[cur].range}: ${boost ? 24 : 8} ${dictionary[cur].tiles}` + (boost ? ` (${dictionary[cur].boost})` : '');
-            document.getElementById('m-quality').innerText = txtQ;
-            document.getElementById('r-quality').classList.toggle('boost', boost);
+                const available = [];
+                if (useI) available.push({ key: 'i', cap: capI });
+                if (useQ) available.push({ key: 'q', cap: capQ });
+                if (useB) available.push({ key: 'b', cap: capB });
 
-            // Sprinklers: Iridium
-            totalTiles += i * (boost ? 48 : 24);
-            const txtI = `${dictionary[cur].range}: ${boost ? 48 : 24} ${dictionary[cur].tiles}` + (boost ? ` (${dictionary[cur].boost})` : '');
-            document.getElementById('m-iridium').innerText = txtI;
-            document.getElementById('r-iridium').classList.toggle('boost', boost);
+                let remainder = targetTiles;
 
-            // Counter update and animation
+                if (available.length > 0 && targetTiles > 0) {
+                    for (let idx = 0; idx < available.length; idx++) {
+                        const isLast = (idx === available.length - 1);
+                        const sprinkler = available[idx];
+                        
+                        if (isLast) {
+                            let count = Math.ceil(remainder / sprinkler.cap);
+                            if (sprinkler.key === 'i') i = count;
+                            if (sprinkler.key === 'q') q = count;
+                            if (sprinkler.key === 'b') b = count;
+                            remainder = 0;
+                        } else {
+                            let count = Math.floor(remainder / sprinkler.cap);
+                            if (sprinkler.key === 'i') i = count;
+                            if (sprinkler.key === 'q') q = count;
+                            if (sprinkler.key === 'b') b = count;
+                            remainder %= sprinkler.cap; 
+                        }
+                    }
+                }
+
+                totalSprinklers = i + q + b;
+                totalTiles = (i * capI) + (q * capQ) + (b * capB);
+
+            } else {
+                b = parseInt(document.getElementById('i-basic').value) || 0;
+                q = parseInt(document.getElementById('i-quality').value) || 0;
+                i = parseInt(document.getElementById('i-iridium').value) || 0;
+
+                document.getElementById('btn-basic').classList.toggle('show', b > 0);
+                document.getElementById('btn-quality').classList.toggle('show', q > 0);
+                document.getElementById('btn-iridium').classList.toggle('show', i > 0);
+
+                totalTiles += b * (boost ? 8 : 4);
+                const txtB = `${dictionary[cur] && dictionary[cur].range ? dictionary[cur].range : 'Range'}: ${boost ? 8 : 4} ${dictionary[cur] && dictionary[cur].tiles ? dictionary[cur].tiles : 'tiles'}` + (boost ? ` (${dictionary[cur] && dictionary[cur].boost ? dictionary[cur].boost : '+ boost'})` : '');
+                document.getElementById('m-basic').innerText = txtB;
+                document.getElementById('r-basic').classList.toggle('boost', boost);
+
+                totalTiles += q * (boost ? 24 : 8);
+                const txtQ = `${dictionary[cur] && dictionary[cur].range ? dictionary[cur].range : 'Range'}: ${boost ? 24 : 8} ${dictionary[cur] && dictionary[cur].tiles ? dictionary[cur].tiles : 'tiles'}` + (boost ? ` (${dictionary[cur] && dictionary[cur].boost ? dictionary[cur].boost : '+ boost'})` : '');
+                document.getElementById('m-quality').innerText = txtQ;
+                document.getElementById('r-quality').classList.toggle('boost', boost);
+
+                totalTiles += i * (boost ? 48 : 24);
+                const txtI = `${dictionary[cur] && dictionary[cur].range ? dictionary[cur].range : 'Range'}: ${boost ? 48 : 24} ${dictionary[cur] && dictionary[cur].tiles ? dictionary[cur].tiles : 'tiles'}` + (boost ? ` (${dictionary[cur] && dictionary[cur].boost ? dictionary[cur].boost : '+ boost'})` : '');
+                document.getElementById('m-iridium').innerText = txtI;
+                document.getElementById('r-iridium').classList.toggle('boost', boost);
+            }
+
             const sumEl = document.getElementById('sum');
             sumEl.style.transform = "scale(1.2)";
             setTimeout(() => sumEl.style.transform = "scale(1)", 150);
-            sumEl.innerText = totalTiles;
+            sumEl.innerText = isReverseMode ? totalSprinklers : totalTiles;
 
-            // Material requirements
             const req = { copper: 0, iron: 0, gold: 0, quartz: 0, iri_bar: 0, battery: 0 };
             req.copper += b; 
             req.iron += b;
@@ -225,17 +298,26 @@
             req.iri_bar += i; 
             req.battery += i;
 
-            // Generating results
             const resDiv = document.getElementById('resList');
-            if (totalTiles === 0) {
-                resDiv.innerText = dictionary[cur].wait;
+            const targetWaitStr = (dictionary[cur] && dictionary[cur].wait) ? dictionary[cur].wait : '...';
+            
+            if (isReverseMode ? totalSprinklers === 0 : totalTiles === 0) {
+                resDiv.innerText = targetWaitStr;
             } else {
                 let htmlParts = [];
+                
+                if (isReverseMode) {
+                    if (i > 0) htmlParts.push(`<span class="res-item"><img src="${wikiBase}9/90/Iridium_Sprinkler.png" class="res-img" alt="Iridium"> <strong>x${i}</strong> <span data-i18n="iridium">${dictionary[cur].iridium}</span></span>`);
+                    if (q > 0) htmlParts.push(`<span class="res-item"><img src="${wikiBase}a/af/Quality_Sprinkler.png" class="res-img" alt="Quality"> <strong>x${q}</strong> <span data-i18n="quality">${dictionary[cur].quality}</span></span>`);
+                    if (b > 0) htmlParts.push(`<span class="res-item"><img src="${wikiBase}0/08/Sprinkler.png" class="res-img" alt="Basic"> <strong>x${b}</strong> <span data-i18n="basic">${dictionary[cur].basic}</span></span>`);
+                    
+                    htmlParts.push('<hr style="width: 100%; border: 1px dashed #a35d28; margin: 10px 0;">');
+                }
+
                 Object.keys(req).forEach(k => {
                     if (req[k] > 0) {
-                        // Reading the dictionary using a function that supports arrays with plural forms
-                        const rawNameData = dictionary[cur][mats[k].key];
-                        const itemName = getPluralName(cur, req[k], rawNameData);
+                        const rawNameData = (dictionary[cur] && dictionary[cur][mats[k].key]) ? dictionary[cur][mats[k].key] : k;
+                        const itemName = typeof rawNameData === 'string' ? rawNameData : getPluralName(cur, req[k], rawNameData);
                         
                         htmlParts.push(
                             `<span class="res-item">` +
@@ -249,9 +331,20 @@
             }
         }
 
-        // Application start
-        setLang('en');
-    </script>
+        if (typeof dictionary !== 'undefined') { setLang('en'); }
 
+        window.addEventListener('load', () => {
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.value = '';
+            });
+
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            toggleReverseMode();
+            calc();
+        });
+    </script>
 </body>
 </html>
