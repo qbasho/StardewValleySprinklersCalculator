@@ -8,26 +8,32 @@ A lightweight, interactive web utility designed for Stardew Valley players to ea
 
 ## ✨ Features
 
-- **Calculates the resources required for crafting sprinklers:** No more tedious calculations using the wiki - just enter the desired number of sprinklers, and the calculator handles the rest ;)
-- **Pressure nozzles calculations:** Includes tile calculations for sprinklers equipped with **pressure nozzles**.
-- **Lightweight with offline capabilities:** At only 31 KB, you can simply download the repository and run `index.html` on your PC whenever you need it.
-- **Clean UI:** Minimalist, user-friendly design featuring Stardew Valley sprite assets for easy visual recognition.
-- **Multilingual Support:** A built-in language selector (🌍) makes the tool accessible to non-English-speaking players. *(Apologies for any inaccurate translations – I may set up Crowdin in the future to collaborate with native speakers of the available languages.)*
-
-## 🛠 Usage
-
-1. Open the [Calculator Website](https://qbasho.github.io/StardewValleySprinklersCalculator/).
-2. Input the number of each sprinkler type you want to calculate:
-   - **Basic Sprinkler** (Waters 4 adjacent tiles)
-   - **Quality Sprinkler** (Waters 8 surrounding tiles)
-   - **Iridium Sprinkler** (Waters 24 surrounding tiles)
-3. The planner will automatically tally the total number of crops that will be watered by your setup. This is perfect for planning exactly how many seeds to buy at Pierre's!
-4. *(Optional)* Click the Globe (🌍) icon in the bottom corner to change the UI language.
-
-## 🧑‍🌾 Author
-
-Created by [@qbasho](https://x.com/qbasho). 
+- **Calculates crafting resources:** No more tedious calculations using the wiki—just enter the desired number of sprinklers, and the calculator handles the rest! ;)
+- **Two calculation modes:**
+  1. **Standard Mode:** Calculates how many tiles you can water based on an entered number of sprinklers
+  2. **Reverse Mode:** Calculates the required number of sprinklers based on the desired number of tiles to water
+- **Pressure Nozzle calculations:** Includes coverage calculations for sprinklers equipped with **Pressure Nozzles**
+- **Lightweight with offline capabilities:** At only 40.1 KB, you can simply download the repository and run `index.html` on your PC whenever you need it
+- **Clean UI:** A minimalist, user-friendly design featuring original Stardew Valley sprite assets for easy visual recognition
+- **Multilingual support:** A built-in language selector (🌍) makes the tool accessible to non-English-speaking players *(Apologies for any inaccurate translations—I may set up Crowdin in the future to collaborate with native speakers!)*
 
 ---
 
-*Disclaimer: Stardew Valley and its assets are the property of ConcernedApe. This is a fan-made tool to assist players.*
+## 🛠 Usage
+
+1. Open the [Calculator Website](https://qbasho.github.io/StardewValleySprinklersCalculator/)
+2. Choose whether you want to include **Pressure Nozzles**
+3. Choose whether to enable **Reverse Mode** (calculates how many sprinklers you need based on the target number of tiles to water)
+   - In Reverse Mode, you can select which sprinkler tiers to include (useful if you already have some in your inventory!)
+4. The planner will automatically calculate the total number of crops watered or the required number of sprinklers for your setup (perfect for planning how many seeds to buy at Pierre's General Store!)
+5. *(Optional)* Click the Globe (🌍) icon in the bottom corner to change the UI language
+
+---
+
+## 🧑‍🌾 Author
+
+Created by [@qbasho](https://x.com/qbasho)
+
+---
+
+*Disclaimer: Stardew Valley and its assets are the property of ConcernedApe. This is an unofficial, fan-made tool created to assist players.*
